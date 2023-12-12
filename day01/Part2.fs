@@ -20,19 +20,16 @@ let substrings =
        ("nine", 9)
        ("9", 9) |]
 
-let fstDigit (str: string) =
+let digit findSubstr minOrMaxBy =
     substrings
-    |> Array.map (fun (ss, v) -> (str.IndexOf ss, v))
+    |> Array.map (fun (ss, v) -> findSubstr ss, v)
     |> Array.filter (fun (i, _) -> i > -1)
-    |> Array.minBy fst
+    |> minOrMaxBy fst
     |> snd
 
-let sndDigit (str: string) =
-    substrings
-    |> Array.map (fun (ss, v) -> (str.LastIndexOf ss, v))
-    |> Array.filter (fun (i, _) -> i > -1)
-    |> Array.maxBy fst
-    |> snd
+let fstDigit (str: string) = digit (str.IndexOf) Array.minBy
+
+let sndDigit (str: string) = digit (str.LastIndexOf) Array.maxBy
 
 let calibrationValues (str: string) = 10 * fstDigit str + sndDigit str
 
