@@ -20,21 +20,21 @@ let substrings =
        ("nine", 9)
        ("9", 9) |]
 
-let firstVal (str: string) =
+let fstDigit (str: string) =
     substrings
     |> Array.map (fun (ss, v) -> (str.IndexOf ss, v))
     |> Array.filter (fun (i, _) -> i > -1)
     |> Array.minBy fst
     |> snd
 
-let secondVal (str: string) =
+let sndDigit (str: string) =
     substrings
     |> Array.map (fun (ss, v) -> (str.LastIndexOf ss, v))
     |> Array.filter (fun (i, _) -> i > -1)
     |> Array.maxBy fst
     |> snd
 
-let calibrationValues (str: string) = 10 * firstVal str + secondVal str
+let calibrationValues (str: string) = 10 * fstDigit str + sndDigit str
 
 let solve =
     Utils.FileReading.readLines

@@ -2,9 +2,9 @@
 
 let toDigit c = int c - int '0'
 let isDigit c = c >= 0 && c <= 9
-let fstVal s = Seq.find (fun _ -> true) s
-let sndVal s = Seq.findBack (fun _ -> true) s
-let calibrationVal s = (10 * fstVal s) + sndVal s
+let fstDigit s = Seq.find (fun _ -> true) s
+let sndDigit s = Seq.findBack (fun _ -> true) s
+let calibrationVal s = (10 * fstDigit s) + sndDigit s
 
 let solve =
     Utils.FileReading.readLines
