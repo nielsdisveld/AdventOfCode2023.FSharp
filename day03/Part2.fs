@@ -22,9 +22,9 @@ let gearRatio parts gear =
     | _ -> 0
 
 let run rows =
-    let gears = getGears rows
     let parts = Common.getParts rows
-
-    gears |> Seq.map (gearRatio parts) |> Seq.sum
+    getGears rows 
+    |> Seq.map (gearRatio parts) 
+    |> Seq.sum
 
 let solve = Utils.FileReading.readLines >> run
