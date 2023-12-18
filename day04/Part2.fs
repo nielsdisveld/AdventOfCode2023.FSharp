@@ -1,8 +1,5 @@
 module Part2
 
-let x = [| 1; 2; 3 |]
-let y = x[0..1]
-
 let folder (prev: int[]) (i, c) =
 
     if c = 0 then
@@ -10,7 +7,6 @@ let folder (prev: int[]) (i, c) =
     else
         let t = prev[i - c .. i - 1] |> Array.sum
         prev[i] <- t + 1
-
 
     prev
 
