@@ -12,10 +12,9 @@ let parseRanges (str: string) =
     |> Array.map snd
     |> Array.collect toArray
 
-let alamanac (inp: seq<string>) =
+let almanac (inp: seq<string>) =
     let seedRanges = inp |> Seq.head |> parseRanges
-    printfn "%A" seedRanges.Length
     let maps = inp |> Seq.skip 1 |> Common.parseMapping |> List.rev
     (seedRanges, maps)
 
-let solve = Utils.FileReading.readLines >> alamanac >> Common.mapSeeds >> Array.min
+let solve = Utils.FileReading.readLines >> almanac >> Common.mapSeeds >> Array.min

@@ -5,9 +5,9 @@ let parseSeeds (str: string) =
     |> Array.skip 1 // skip the "seeds:"
     |> Array.map int64
 
-let alamanac (inp: seq<string>) =
+let almanac (inp: seq<string>) =
     let seeds = Seq.head inp |> parseSeeds
     let maps = inp |> Seq.skip 1 |> Common.parseMapping |> List.rev
     (seeds, maps)
 
-let solve = Utils.FileReading.readLines >> alamanac >> Common.mapSeeds >> Array.min
+let solve = Utils.FileReading.readLines >> almanac >> Common.mapSeeds >> Array.min
