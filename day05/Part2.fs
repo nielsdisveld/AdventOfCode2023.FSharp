@@ -1,6 +1,8 @@
 module Part2
 
-let difference (n, r) (n', r') =
+type Range = int64 * int64 // A range is defined by a starting point and the length of the range
+
+let difference (n, r) (n', r') = // The set difference of a range within a range
     if r' = 0L then
         [| (n, r) |]
     else
@@ -22,14 +24,14 @@ let mapRange (dest, source, range) (n, r) =
     unmapped, (mappedn + (dest - source), mappedr)
 
 
-let mapMany (ranges: (int64 * int64)[]) mappingLine =
+let mapManyRanges (ranges: Range[]) mappingLine = // Map many ranges with one line of a map
     let unMapped, mapped = ranges |> Array.map (mapRange mappingLine) |> Array.unzip
 
     unMapped |> Array.collect id, mapped
 
-let map (ranges: (int64 * int64)[]) mappingLines =
+let map (ranges: Range[]) mappingLines = // i.e. map many ranges with seed-to-soil map
     let folder (unmapped, mapped) mappingLine =
-        let newUnmapped, newMapped = mapMany unmapped mappingLine
+        let newUnmapped, newMapped = mapManyRanges unmapped mappingLine
         newUnmapped, Array.append mapped newMapped
 
     let unmapped, mapped = mappingLines |> List.fold folder (ranges, [||])
