@@ -4,9 +4,9 @@ type Range = int64 * int64 // A range is defined by a starting point and the len
 
 let difference (n, r) (n', r') = // The set difference of a range within a range
     if r' = 0L then
-        [| (n, r) |]
+        [ (n, r) ]
     else
-        [| (n, n' - n); (n' + r', r - r' - (n' - n)) |]
+        [ (n, n' - n); (n' + r', r - r' - (n' - n)) ]
 
 let mapRange (dest, source, range) (n, r) =
     let mappedn, mappedr =
@@ -24,19 +24,19 @@ let mapRange (dest, source, range) (n, r) =
     unmapped, (mappedn + (dest - source), mappedr)
 
 
-let mapManyRanges (ranges: Range[]) mappingLine = // Map many ranges with one line of a map
-    let unMapped, mapped = ranges |> Array.map (mapRange mappingLine) |> Array.unzip
+let mapManyRanges (ranges: Range list) mappingLine = // Map many ranges with one line of a map
+    let unMapped, mapped = ranges |> List.map (mapRange mappingLine) |> List.unzip
 
-    unMapped |> Array.collect id, mapped
+    unMapped |> List.collect id, mapped
 
-let map (ranges: Range[]) mappingLines = // i.e. map many ranges with seed-to-soil map
+let map (ranges: Range list) mappingLines = // i.e. map many ranges with seed-to-soil map
     let folder (unmapped, mapped) mappingLine =
         let newUnmapped, newMapped = mapManyRanges unmapped mappingLine
-        newUnmapped, Array.append mapped newMapped
+        newUnmapped, newMapped @ mapped
 
-    let unmapped, mapped = mappingLines |> List.fold folder (ranges, [||])
+    let unmapped, mapped = mappingLines |> List.fold folder (ranges, [])
 
-    Array.append mapped unmapped |> Array.filter (fun (_, r) -> r <> 0)
+    List.append mapped unmapped |> List.filter (fun (_, r) -> r <> 0)
 
 let parseRanges (str: string) =
     str.Split ' '
@@ -48,11 +48,11 @@ let parseRanges (str: string) =
     |> Array.map snd
 
 let almanac (inp: seq<string>) =
-    let seedRanges = inp |> Seq.head |> parseRanges
+    let seedRanges = inp |> Seq.head |> parseRanges |> Array.toList
     let maps = inp |> Seq.skip 1 |> Common.parseMapping |> List.rev
     (seedRanges, maps)
 
 let mapSeeds (seeds, maps) = maps |> List.fold map seeds
 
 let solve =
-    Utils.FileReading.readLines >> almanac >> mapSeeds >> Array.minBy fst >> fst
+    Utils.FileReading.readLines >> almanac >> mapSeeds >> List.minBy fst >> fst
