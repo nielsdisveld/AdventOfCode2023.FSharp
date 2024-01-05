@@ -16,7 +16,7 @@ let zeroes (a: float, b: float, c: float) = // Solutions of ax^2+bx+c=0
     (-b - d) / (2.0 * a), (-b + d) / (2.0 * a)
 
 let winningRange (t, d) =
-    let zero1, zero2 = zeroes (1, -t, d) // Solving (t-i)=d where i is button pressed reduces to solving i^2-ti+d=0
+    let zero1, zero2 = zeroes (1, -t, d) // Solving (t-i)*i=d where i is button pressed reduces to solving i^2-ti+d=0
     let adjusted = min t (Math.Floor zero2) // Make sure that the solutions don't exceed t
     adjusted - (Math.Ceiling zero1) // Number of solutions is equal to the integer distance between the rounded zeroes
 
