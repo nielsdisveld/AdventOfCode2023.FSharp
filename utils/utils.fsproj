@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="FileReading.fs" />
+    <Compile Include="Seq.fs" />
   </ItemGroup>
 
 </Project>
