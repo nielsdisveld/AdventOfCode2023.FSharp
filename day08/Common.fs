@@ -1,6 +1,6 @@
 module Common
 
-type Nodes = Map<string, string * string>
+type Nodes = Map<string, string * string> // e.g. AAA = (BBB, CCC)
 
 let parseNode (str: string) = str[0..2], (str[7..9], str[12..14])
 

@@ -16,7 +16,7 @@ let rec path navigateNext start =
 
 let modEquation lst =
     let i = lst |> List.findIndex (endsWith 'Z')
-    int64 i, int64 lst.Length
+    int64 i, int64 lst.Length // (a,b) represents a mod b
 
 let run (instructions: string, nodes: Nodes) =
     let navigateNext = navigateMany nodes instructions
