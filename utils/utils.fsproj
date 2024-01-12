@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Include="FileReading.fs" />
     <Compile Include="Seq.fs" />
+    <Compile Include="Math.fs" />
+    <Compile Include="Debug.fs" />
   </ItemGroup>
 
 </Project>
