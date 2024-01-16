@@ -1,20 +1,19 @@
-﻿let parseLine (str: string) = str.Split ' ' |> Array.map int
+﻿let parseLine (str: string) = str.Split ' ' |> Seq.map int
 
-let differences (arr: int[]) =
-    [| 1 .. arr.Length - 1 |] |> Array.map (fun i -> arr[i] - arr[i - 1])
+let differences = Seq.pairwise >> Seq.map (fun (x, y) -> y - x)
 
-let findZeroes (arr: int[]) =
+let findZeroes sq =
     let rec stepper current acc =
-        match current |> Array.forall (fun i -> i = 0) with
+        match current |> Seq.forall (fun i -> i = 0) with
         | true -> acc
         | _ ->
-            let last = current[current.Length - 1]
+            let last = current |> Seq.last
             let next = differences current
             stepper next (last :: acc)
 
-    stepper arr []
+    stepper sq []
 
-let solveLine = findZeroes >> List.reduce (+)
+let solveLine = findZeroes >> Seq.reduce (+)
 
 let solve f =
     Utils.FileReading.readLines
@@ -24,4 +23,4 @@ let solve f =
     >> Seq.reduce (+)
 
 "input.txt" |> solve id |> printfn "%i"
-"input.txt" |> solve Array.rev |> printfn "%i"
+"input.txt" |> solve Seq.rev |> printfn "%i"
