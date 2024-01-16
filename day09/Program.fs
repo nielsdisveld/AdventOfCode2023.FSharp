@@ -19,7 +19,7 @@ let solveLine = findZeroes >> List.reduce (+)
 let solve f =
     Utils.FileReading.readLines
     >> Seq.map parseLine
-    >> Seq.map f
+    >> Seq.map f // For part 2 we need to reverse all the arrays here
     >> Seq.map solveLine
     >> Seq.reduce (+)
 
