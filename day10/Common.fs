@@ -6,6 +6,8 @@ type Direction =
     | S
     | W
 
+let add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+
 let opposite =
     function
     | N -> S
@@ -31,14 +33,14 @@ let connections =
     | _ -> [||]
     >> Set.ofArray
 
-let adjacent = connections >> Set.map toRelPos
+let adjacents pipe (x, y) =
+    pipe |> connections |> Set.map toRelPos |> Set.map (add (x, y))
 
 let findStart (tiles: char[,]) =
     match tiles |> Utils.Array2D.findIndex 'S' with
     | Some(x, y) -> x, y
     | _ -> failwith "Cannot find start tile."
 
-let add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
 let setStartPipe (tiles: char[,]) =
     let start = findStart tiles
@@ -52,7 +54,7 @@ let setStartPipe (tiles: char[,]) =
 
     let startPipe =
         [| '|'; '-'; '7'; 'J'; 'L'; 'F' |]
-        |> Array.find (fun c -> connections c |> Set.isSuperset startConnections)
+        |> Array.find (fun c -> connections c |> Set.isSuperset startConnections) // See which pipe 'fits' the start tile
 
     let updated = tiles |> Array2D.map (fun c -> if c = 'S' then startPipe else c)
 
@@ -70,13 +72,11 @@ let transform input =
             arr[y - 1][x - 1])
 
 let getLoop start (tiles: char[,]) =
-    let rec loop i visited currents =
-        let adjacents =
-            currents
-            |> Seq.map (fun (x, y) -> tiles[x, y] |> adjacent |> Set.map (add (x, y)))
-            |> Set.unionMany
+    let rec loop i visited heads =
+        let adjToHeads =
+            heads |> Seq.map (fun (x, y) -> adjacents tiles[x, y] (x, y)) |> Set.unionMany
 
-        let nexts = Set.difference adjacents visited
+        let nexts = Set.difference adjToHeads visited
 
         if nexts |> Set.isEmpty then
             i, visited
