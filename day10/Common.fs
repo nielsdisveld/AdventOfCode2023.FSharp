@@ -29,9 +29,9 @@ let connections =
     | 'L' -> [| N; E |]
     | 'F' -> [| S; E |]
     | _ -> [||]
+    >> Set.ofArray
 
-let pipes = [| '|'; '-'; '7'; 'J'; 'L'; 'F' |]
-let adjacent = connections >> Set.ofArray >> Set.map toRelPos
+let adjacent = connections >> Set.map toRelPos
 
 let findStart (tiles: char[,]) =
     match tiles |> Utils.Array2D.findIndex 'S' with
@@ -46,13 +46,13 @@ let setStartPipe (tiles: char[,]) =
     let startConnections =
         [| N; E; S; W |]
         |> Array.map (fun d -> d, d |> toRelPos |> add start) // i.e. N maps to N, (5,7)
-        |> Array.filter (fun (d, (x, y)) -> tiles[x, y] |> connections |> Array.contains (opposite d))
+        |> Array.filter (fun (d, (x, y)) -> tiles[x, y] |> connections |> Set.contains (opposite d))
         |> Array.map fst
         |> Set.ofArray
 
     let startPipe =
-        pipes
-        |> Array.find (fun c -> connections c |> Set.ofArray |> Set.isSubset startConnections)
+        [| '|'; '-'; '7'; 'J'; 'L'; 'F' |]
+        |> Array.find (fun c -> connections c |> Set.isSuperset startConnections)
 
     let updated = tiles |> Array2D.map (fun c -> if c = 'S' then startPipe else c)
 
