@@ -1,53 +1,39 @@
 module Common
 
-type Direction =
-    | N
-    | E
-    | S
-    | W
+// Wind directions:
+let n = (0, -1)
+let e = (1, 0)
+let s = (0, 1)
+let w = (-1, 0)
+let opposite (x, y) = (-x, -y)
 
 let add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
-let opposite =
-    function
-    | N -> S
-    | E -> W
-    | S -> N
-    | W -> E
-
-let toRelPos =
-    function
-    | N -> 0, -1
-    | E -> 1, 0
-    | S -> 0, 1
-    | W -> -1, 0
-
 let connections =
     function
-    | '|' -> [| N; S |]
-    | '-' -> [| E; W |]
-    | '7' -> [| W; S |]
-    | 'J' -> [| N; W |]
-    | 'L' -> [| N; E |]
-    | 'F' -> [| S; E |]
+    | '|' -> [| n; s |]
+    | '-' -> [| e; w |]
+    | '7' -> [| w; s |]
+    | 'J' -> [| n; w |]
+    | 'L' -> [| n; e |]
+    | 'F' -> [| s; e |]
     | _ -> [||]
     >> Set.ofArray
 
 let adjacents pipe (x, y) =
-    pipe |> connections |> Set.map toRelPos |> Set.map (add (x, y))
+    pipe |> connections |> Set.map (add (x, y))
 
 let findStart (tiles: char[,]) =
     match tiles |> Utils.Array2D.findIndex 'S' with
     | Some(x, y) -> x, y
     | _ -> failwith "Cannot find start tile."
 
-
 let setStartPipe (tiles: char[,]) =
     let start = findStart tiles
 
     let startConnections =
-        [| N; E; S; W |]
-        |> Array.map (fun d -> d, d |> toRelPos |> add start) // i.e. N maps to N, (5,7)
+        [| n; e; s; w |]
+        |> Array.map (fun d -> d, d |> add start) 
         |> Array.filter (fun (d, (x, y)) -> tiles[x, y] |> connections |> Set.contains (opposite d))
         |> Array.map fst
         |> Set.ofArray
