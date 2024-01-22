@@ -17,25 +17,21 @@ let transform input =
     let arr = input |> Seq.map Seq.toArray |> Seq.toArray
     let width = arr[0].Length
     let height = arr.Length
-
     Array2D.init width height (fun x y -> arr[y][x])
 
 let findNonEmptyLines f arr = arr |> Seq.map f |> Set.ofSeq
 
-let adjustedNonEmptyLines z1 z2 nonEmptyLines =
+let nonEmptyBetween z1 z2 nonEmptyLines =
     nonEmptyLines
     |> Seq.filter (fun z -> z > min z1 z2 && z <= max z1 z2)
     |> Seq.length
 
-let distanceAll nonEmptyRows nonEmptyColumns pairs =
-    let distance ((x1, y1), (x2, y2)) =
-        let dx = abs (x1 - x2)
-        let dy = abs (y1 - y2)
-        let emptyX = dx - (nonEmptyColumns |> adjustedNonEmptyLines x1 x2)
-        let emptyY = dy - (nonEmptyRows |> adjustedNonEmptyLines y1 y2)
-        dx + dy + emptyX + emptyY
-
-    pairs |> Seq.map distance
+let distance nonEmptyRows nonEmptyColumns ((x1, y1), (x2, y2)) =
+    let dx = abs (x1 - x2)
+    let dy = abs (y1 - y2)
+    let emptyBetweenX = dx - (nonEmptyColumns |> nonEmptyBetween x1 x2)
+    let emptyBetweenY = dy - (nonEmptyRows |> nonEmptyBetween y1 y2)
+    dx + dy + emptyBetweenX + emptyBetweenY
 
 let run input =
     let arr = input |> transform
@@ -43,7 +39,7 @@ let run input =
     let nonEmptyRows = galaxies |> findNonEmptyLines snd
     let nonEmptyColumns = galaxies |> findNonEmptyLines fst
 
-    galaxies |> uniquePairs |> distanceAll nonEmptyRows nonEmptyColumns
+    galaxies |> uniquePairs |> Seq.map (distance nonEmptyRows nonEmptyColumns)
 
 let solve = Utils.FileReading.readLines >> run >> Seq.sum
 
