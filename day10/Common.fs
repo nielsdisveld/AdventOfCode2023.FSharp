@@ -1,12 +1,9 @@
 module Common
 
 // Wind directions:
-let n = (0, -1)
-let e = (1, 0)
-let s = (0, 1)
-let w = (-1, 0)
-let opposite (x, y) = (-x, -y)
+let n, e, s, w = (0, -1), (1, 0), (0, 1), (-1, 0)
 
+let opposite (x, y) = (-x, -y)
 let add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
 let connections =
@@ -33,7 +30,7 @@ let setStartPipe (tiles: char[,]) =
 
     let startConnections =
         [| n; e; s; w |]
-        |> Array.map (fun d -> d, d |> add start) 
+        |> Array.map (fun d -> d, d |> add start)
         |> Array.filter (fun (d, (x, y)) -> tiles[x, y] |> connections |> Set.contains (opposite d))
         |> Array.map fst
         |> Set.ofArray
