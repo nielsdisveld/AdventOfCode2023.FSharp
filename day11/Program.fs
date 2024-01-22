@@ -31,8 +31,8 @@ let distance i nonEmptyRows nonEmptyColumns ((x1, y1), (x2, y2)) =
     let dy = abs (y1 - y2)
     let expandedX = dx - (nonEmptyColumns |> nonEmptyBetween x1 x2)
     let expandedY = dy - (nonEmptyRows |> nonEmptyBetween y1 y2)
-    let totalExt = (i - 1L) * int64 (expandedX + expandedY)
-    int64 (dx + dy) + totalExt
+    let totalExpanded = (i - 1L) * int64 (expandedX + expandedY)
+    int64 (dx + dy) + totalExpanded
 
 let run i input =
     let arr = input |> transform
