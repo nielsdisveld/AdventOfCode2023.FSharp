@@ -1,8 +1,8 @@
-﻿let uniquePairs sq =
+﻿let pairs sq =
     sq
     |> Seq.allPairs sq
-    |> Seq.filter (fun (a, b) -> a <> b)
-    |> Seq.distinctBy (fun (a, b) -> min a b, max a b)
+    |> Seq.filter (fun (a, b) -> a <> b) // Remove pairs of points with themselves
+    |> Seq.distinctBy (fun (a, b) -> min a b, max a b) // Remove duplicate pairs
 
 let findGalaxies (arr: char[,]) =
     let rec loop x y acc =
@@ -26,21 +26,24 @@ let nonEmptyBetween z1 z2 nonEmptyLines =
     |> Seq.filter (fun z -> z > min z1 z2 && z <= max z1 z2)
     |> Seq.length
 
-let distance nonEmptyRows nonEmptyColumns ((x1, y1), (x2, y2)) =
+let distance i nonEmptyRows nonEmptyColumns ((x1, y1), (x2, y2)) =
     let dx = abs (x1 - x2)
     let dy = abs (y1 - y2)
-    let emptyBetweenX = dx - (nonEmptyColumns |> nonEmptyBetween x1 x2)
-    let emptyBetweenY = dy - (nonEmptyRows |> nonEmptyBetween y1 y2)
-    dx + dy + emptyBetweenX + emptyBetweenY
+    let expandedX = dx - (nonEmptyColumns |> nonEmptyBetween x1 x2)
+    let expandedY = dy - (nonEmptyRows |> nonEmptyBetween y1 y2)
+    let totalExt = (i - 1L) * int64 (expandedX + expandedY)
+    int64 (dx + dy) + totalExt
 
-let run input =
+let run i input =
     let arr = input |> transform
     let galaxies = arr |> findGalaxies
     let nonEmptyRows = galaxies |> findNonEmptyLines snd
     let nonEmptyColumns = galaxies |> findNonEmptyLines fst
 
-    galaxies |> uniquePairs |> Seq.map (distance nonEmptyRows nonEmptyColumns)
+    galaxies |> pairs |> Seq.map (distance i nonEmptyRows nonEmptyColumns)
 
-let solve = Utils.FileReading.readLines >> run >> Seq.sum
+let solve i =
+    Utils.FileReading.readLines >> run i >> Seq.sum
 
-"input.txt" |> solve |> printfn "%A"
+"input.txt" |> solve 2L |> printfn "%A" // Part1
+"input.txt" |> solve 1000000L |> printfn "%A" // Part2
