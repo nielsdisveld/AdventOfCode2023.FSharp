@@ -27,7 +27,7 @@ let rec consume springs damaged =
         | '.' :: _ -> []
         | _ :: tail -> consume tail (damaged - 1)
 
-let rec findPossible springs damaged =
+let rec consumeGroup springs damaged =
     if damaged = 0 then
         [ springs ]
 
@@ -35,10 +35,10 @@ let rec findPossible springs damaged =
         match springs with
         | [] -> []
         | '#' :: rest -> consume rest (damaged - 1)
-        | '.' :: rest -> findPossible rest damaged
+        | '.' :: rest -> consumeGroup rest damaged
         | '?' :: rest ->
             let consumed = consume rest (damaged - 1)
-            let notConsumed = findPossible rest damaged
+            let notConsumed = consumeGroup rest damaged
             consumed @ notConsumed
         | _ -> failwith "Invalid char"
 
@@ -52,17 +52,16 @@ let run ((springs0: string), (pattern0: int list)) =
             match pattern with
             | [] ->
                 let result = if springs |> List.contains '#' then 0L else 1L
-                cache.Add((springs, pattern), result)
+                cache |> Map.add (springs, pattern) result
             | damaged :: rest ->
-                let consumedGroup = findPossible springs damaged
+                let consumedGroup = consumeGroup springs damaged
 
                 let folder (cache, acc) possible =
                     let cache = loop cache possible rest
                     (cache, acc + cache[possible, rest])
 
                 let (cache, n) = consumedGroup |> List.fold folder (cache, 0L)
-
-                cache.Add((springs, pattern), n)
+                cache |> Map.add (springs, pattern) n
 
     let springs0 = springs0 |> List.ofSeq
     loop Map.empty springs0 pattern0 |> Map.find (springs0, pattern0)
