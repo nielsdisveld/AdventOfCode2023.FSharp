@@ -61,7 +61,11 @@ let rewrite ((str: string), (broken: int[])) =
     loop 0 [| (0, 0, 0, 0, 0, '.') |]
 
 let solve f =
-    Utils.FileReading.readLines >> Seq.map parseLine >> Seq.map f >> Seq.sum
+    Utils.FileReading.readLines
+    >> Seq.map parseLine
+    >> Seq.map f
+    >> Seq.map rewrite
+    >> Seq.sum
 
 let timer = System.Diagnostics.Stopwatch.StartNew()
 solve id "input.txt" |> printfn "%A"
