@@ -11,4 +11,10 @@ module Array2D =
 
         loop 0 0
 
-    let getByTuple (x, y) (arr: 'T[,]) = arr[x, y]
+    let sum (arr: _[,]) =
+        let rec loop x y acc =
+            if y = arr.GetLength 1 then acc
+            elif x = arr.GetLength 0 then loop 0 (y + 1) acc
+            else loop (x + 1) y (acc + arr[x, y])
+
+        loop 0 0 0
