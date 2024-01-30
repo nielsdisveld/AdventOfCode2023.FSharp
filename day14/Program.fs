@@ -57,19 +57,21 @@ let cycle cubes =
     tiltN cubes >> tiltW cubes >> tiltS cubes >> tiltE cubes
 
 let cyclen n (cubes, rounds) =
+    let cycle = cycle cubes
+
     let rec loop i (cache: Map<_, _>) (cacheInv: Map<_, _>) rounds =
         if i = n then
-            rounds
+            rounds |> load
         elif cache.ContainsKey rounds then
             // We can shortcut the entire loop here
             let j = cache[rounds]
             let r = (n - i) % (i - j)
             cacheInv[j + r]
         else
-            let cycled = rounds |> cycle cubes |> set
+            let cycled = rounds |> cycle |> set
             let cache = cache.Add(rounds, i)
-            let cacheInv = cacheInv.Add(i, rounds)
-            cycled |> loop (i + 1) cache cacheInv
+            let loads = cacheInv.Add(i, rounds |> load)
+            cycled |> loop (i + 1) cache loads
 
     loop 0 Map.empty Map.empty rounds
 
@@ -80,8 +82,7 @@ let part1 =
     >> (fun (c, r) -> tiltN c r)
     >> load
 
-let part2 =
-    Utils.FileReading.readLines >> transform >> rocks >> cyclen 1000000000 >> load
+let part2 = Utils.FileReading.readLines >> transform >> rocks >> cyclen 1000000000
 
 part1 "input.txt" |> printfn "%A"
 part2 "input.txt" |> printfn "%A"
