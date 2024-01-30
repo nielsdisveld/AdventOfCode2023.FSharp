@@ -26,47 +26,42 @@ let rocks (arr: _[,]) =
 
 let load rounds = rounds |> Seq.sumBy snd
 
-let tiltS cubes rounds =
-    let cubeBelow (x, y) =
-        cubes |> Seq.filter (fun (a, b) -> a = x && b < y) |> Seq.maxBy snd
+let cubeAbove cubes (x, y) =
+    cubes |> Seq.filter (fun (a, b) -> a = x && b > y) |> Seq.minBy snd
 
+let cubeBelow cubes (x, y) =
+    cubes |> Seq.filter (fun (a, b) -> a = x && b < y) |> Seq.maxBy snd
+
+let cubeLeft cubes (x, y) =
+    cubes |> Seq.filter (fun (a, b) -> b = y && a < x) |> Seq.maxBy fst
+
+let cubeRight cubes (x, y) =
+    cubes |> Seq.filter (fun (a, b) -> b = y && a > x) |> Seq.minBy fst
+
+let fallN (x, y) i = (x, y - 1 - i)
+let fallS (x, y) i = (x, y + 1 + i)
+let fallW (x, y) i = (x + 1 + i, y)
+let fallE (x, y) i = (x - 1 - i, y)
+
+let tilt findCube newPos cubes rounds =
     rounds
-    |> Seq.countBy cubeBelow
-    |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x, y + 1 + i)))
+    |> Seq.countBy (findCube cubes) // Group the round rocks by the cube rock it falls on
+    |> Seq.collect (fun ((x, y), l) -> Seq.init l (newPos (x, y)))
 
-let tiltW cubes rounds =
-    let cubeOnLeft (x, y) =
-        cubes |> Seq.filter (fun (a, b) -> b = y && a < x) |> Seq.maxBy fst
-
-    rounds
-    |> Seq.countBy cubeOnLeft
-    |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x + 1 + i, y)))
-
-let tiltN cubes rounds =
-    let cubeAbove (x, y) =
-        cubes |> Seq.filter (fun (a, b) -> a = x && b > y) |> Seq.minBy snd
-
-    rounds
-    |> Seq.countBy cubeAbove
-    |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x, y - 1 - i)))
-
-let tiltE cubes rounds =
-    let cubeOnRight (x, y) =
-        cubes |> Seq.filter (fun (a, b) -> b = y && a > x) |> Seq.minBy fst
-
-    rounds
-    |> Seq.countBy cubeOnRight
-    |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x - 1 - i, y)))
+let tiltN = tilt cubeAbove fallN
+let tiltS = tilt cubeBelow fallS
+let tiltW = tilt cubeLeft fallW
+let tiltE = tilt cubeRight fallE
 
 let cycle cubes =
     tiltN cubes >> tiltW cubes >> tiltS cubes >> tiltE cubes
 
 let cyclen n (cubes, rounds) =
     let rec loop i (cache: Map<_, _>) (cacheInv: Map<_, _>) rounds =
-
         if i = n then
             rounds
         elif cache.ContainsKey rounds then
+            // We can shortcut the entire loop here
             let j = cache[rounds]
             let r = (n - i) % (i - j)
             cacheInv[j + r]
