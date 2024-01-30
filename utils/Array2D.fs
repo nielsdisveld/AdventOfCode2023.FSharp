@@ -18,3 +18,12 @@ module Array2D =
             else loop (x + 1) y (acc + arr[x, y])
 
         loop 0 0 0
+
+    let print s (arr: _[,]) =
+        let heigth = arr.GetLength 1
+
+        for i in 0 .. heigth - 1 do
+            arr[0.., i]
+            |> Seq.map (fun x -> x.ToString())
+            |> Seq.reduce (fun s1 s2 -> s1 + s + s2)
+            |> printfn "%A"

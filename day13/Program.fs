@@ -28,7 +28,7 @@ let flip (arr: _[,]) =
 let transpose (arr: _[,]) =
     Array2D.init (arr.GetLength 1) (arr.GetLength 0) (fun x y -> arr[y, x])
 
-let hasMirrorAt comparer (arr: _[,]) (flipped: _[,]) x =
+let hasMirrorAt x comparer (arr: _[,]) (flipped: _[,]) =
     let width = arr.GetLength 0
     let range = min x (width - x) - 1
     let xflip = width - x
@@ -38,10 +38,10 @@ let hasMirrorAt comparer (arr: _[,]) (flipped: _[,]) x =
 
 let findMirror comparer arr =
     let flipped = flip arr
-    let width = Array2D.length1 arr - 1
+    let width = (arr.GetLength 0) - 1
 
     Seq.init width (fun i -> i + 1)
-    |> Seq.tryFind (hasMirrorAt comparer arr flipped)
+    |> Seq.tryFind (fun i -> hasMirrorAt i comparer arr flipped)
     |> Option.defaultValue 0
 
 let findMirror2 comparer arr =
