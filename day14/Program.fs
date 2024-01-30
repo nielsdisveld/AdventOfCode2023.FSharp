@@ -59,18 +59,18 @@ let cycle cubes =
 let cyclen n (cubes, rounds) =
     let cycle = cycle cubes
 
-    let rec loop i (cache: Map<_, _>) (cacheInv: Map<_, _>) rounds =
+    let rec loop i (cache: Map<_, _>) (loads: Map<_, _>) rounds =
         if i = n then
             rounds |> load
         elif cache.ContainsKey rounds then
             // We can shortcut the entire loop here
             let j = cache[rounds]
             let r = (n - i) % (i - j)
-            cacheInv[j + r]
+            loads[j + r]
         else
             let cycled = rounds |> cycle |> set
             let cache = cache.Add(rounds, i)
-            let loads = cacheInv.Add(i, rounds |> load)
+            let loads = loads.Add(i, rounds |> load)
             cycled |> loop (i + 1) cache loads
 
     loop 0 Map.empty Map.empty rounds
