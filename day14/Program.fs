@@ -27,35 +27,35 @@ let rocks (arr: _[,]) =
 let load rounds = rounds |> Seq.sumBy snd
 
 let tiltS cubes rounds =
-    let nearestCube (x, y) =
+    let cubeBelow (x, y) =
         cubes |> Seq.filter (fun (a, b) -> a = x && b < y) |> Seq.maxBy snd
 
     rounds
-    |> Seq.countBy nearestCube
+    |> Seq.countBy cubeBelow
     |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x, y + 1 + i)))
 
 let tiltW cubes rounds =
-    let nearestCube (x, y) =
+    let cubeOnLeft (x, y) =
         cubes |> Seq.filter (fun (a, b) -> b = y && a < x) |> Seq.maxBy fst
 
     rounds
-    |> Seq.countBy nearestCube
+    |> Seq.countBy cubeOnLeft
     |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x + 1 + i, y)))
 
 let tiltN cubes rounds =
-    let nearestCube (x, y) =
+    let cubeAbove (x, y) =
         cubes |> Seq.filter (fun (a, b) -> a = x && b > y) |> Seq.minBy snd
 
     rounds
-    |> Seq.countBy nearestCube
+    |> Seq.countBy cubeAbove
     |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x, y - 1 - i)))
 
 let tiltE cubes rounds =
-    let nearestCube (x, y) =
+    let cubeOnRight (x, y) =
         cubes |> Seq.filter (fun (a, b) -> b = y && a > x) |> Seq.minBy fst
 
     rounds
-    |> Seq.countBy nearestCube
+    |> Seq.countBy cubeOnRight
     |> Seq.collect (fun ((x, y), l) -> Seq.init l (fun i -> (x - 1 - i, y)))
 
 let cycle cubes =
