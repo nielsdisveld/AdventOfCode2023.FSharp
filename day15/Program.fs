@@ -1,6 +1,6 @@
 ﻿type Cmd =
-    | Add of string * int
-    | Remove of string
+    | Add of int
+    | Remove
 
 let parseLine (str: string) = str.Split ','
 
@@ -12,8 +12,8 @@ let hashCode (str: string) =
 
 let parseStep (str: string) =
     match str.Split [| '='; '-' |] with
-    | [| label; "" |] -> Remove label
-    | [| label; focal |] -> Add(label, int focal[0] - int '0')
+    | [| label; "" |] -> label, Remove
+    | [| label; focal |] -> label, Add(int focal[0] - int '0')
     | _ -> failwith "Invalid step."
 
 let removeFromBox box label =
@@ -27,24 +27,23 @@ let addToBox box (label, focal) =
     | None -> Array.append box [| (label, focal) |]
 
 let scoreArray (i, arr) =
-    arr |> Array.mapi (fun j (_, focal) -> (i + 1) * (j + 1) * focal)
+    arr |> Seq.mapi (fun j (_, focal) -> (i + 1) * (j + 1) * focal) |> Seq.sum
 
 let scoreMap map =
-    map |> Map.toSeq |> Seq.map scoreArray |> Seq.sumBy Array.sum
+    map |> Map.toSeq |> Seq.sumBy scoreArray
 
 let run cmds =
-    let map = Seq.init 256 (fun i -> (i, Array.empty)) |> Map.ofSeq
+    let map = Seq.init 256 (fun i -> (i, [||])) |> Map.ofSeq
 
-    let folder (map: Map<int, _[]>) cmd =
+    let folder (map: Map<int, _>) (label, cmd) =
+        let i = hashCode label
+        let box = map.Item i
+
         match cmd with
-        | Add(label, focal) ->
-            let i = hashCode label
-            let box = map.Item i
+        | Add focal ->
             let updatedBox = (label, focal) |> addToBox box
             map |> Map.add i updatedBox
-        | Remove label ->
-            let i = hashCode label
-            let box = map.Item i
+        | Remove ->
             let updatedBox = label |> removeFromBox box
             map |> Map.add i updatedBox
 
