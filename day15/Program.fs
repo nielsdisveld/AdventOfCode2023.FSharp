@@ -29,7 +29,7 @@ let addToBox box (label, focal) =
 let scoreArray (i, arr) =
     arr |> Seq.mapi (fun j (_, focal) -> (i + 1) * (j + 1) * focal) |> Seq.sum
 
-let scoreMap map =
+let score map =
     map |> Map.toSeq |> Seq.sumBy scoreArray
 
 let run cmds =
@@ -53,8 +53,8 @@ let part1 =
     Utils.FileReading.readLines
     >> Seq.head
     >> parseLine
-    >> Array.map hashCode
-    >> Array.sum
+    >> Seq.map hashCode
+    >> Seq.sum
 
 let part2 =
     Utils.FileReading.readLines
@@ -62,7 +62,7 @@ let part2 =
     >> parseLine
     >> Seq.map parseStep
     >> run
-    >> scoreMap
+    >> score
 
 part1 "input.txt" |> printfn "%A"
 part2 "input.txt" |> printfn "%A"
