@@ -1,4 +1,4 @@
-﻿let n, e, s, w = (0, -1), (1, 0), (0, 1), (-1, 0)
+﻿let up, right, down, left = (0, -1), (1, 0), (0, 1), (-1, 0)
 let (+) (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
 let transform inp =
@@ -8,17 +8,17 @@ let transform inp =
 let next (c: char) p direction =
     match c, direction with
     | '/', (0, -1)
-    | '\\', (0, 1) -> [| e |]
+    | '\\', (0, 1) -> [| right |]
     | '\\', (0, -1)
-    | '/', (0, 1) -> [| w |]
+    | '/', (0, 1) -> [| left |]
     | '/', (1, 0)
-    | '\\', (-1, 0) -> [| n |]
+    | '\\', (-1, 0) -> [| up |]
     | '\\', (1, 0)
-    | '/', (-1, 0) -> [| s |]
+    | '/', (-1, 0) -> [| down |]
     | '-', (0, -1)
-    | '-', (0, 1) -> [| e; w |]
+    | '-', (0, 1) -> [| right; left |]
     | '|', (1, 0)
-    | '|', (-1, 0) -> [| n; s |]
+    | '|', (-1, 0) -> [| up; down |]
     | _ -> [| direction |]
     |> Seq.map (fun d -> p + d, d)
 
@@ -47,17 +47,19 @@ let findMax (arr: _[,]) =
     let width = arr.GetLength 0
     let height = arr.GetLength 1
 
-    let top = Seq.init width (fun i -> (i, 0), s)
-    let bottom = Seq.init width (fun i -> (i, height - 1), n)
-    let left = Seq.init height (fun i -> (0, i), e)
-    let right = Seq.init height (fun i -> (width - 1, i), w)
+    let top = Seq.init width (fun i -> (i, 0), down)
+    let bottom = Seq.init width (fun i -> (i, height - 1), up)
+    let leftSide = Seq.init height (fun i -> (0, i), right)
+    let rightSide = Seq.init height (fun i -> (width - 1, i), left)
 
-    Seq.concat [| top; bottom; left; right |] |> Seq.map (energized arr) |> Seq.max
+    Seq.concat [| top; bottom; leftSide; rightSide |]
+    |> Seq.map (energized arr)
+    |> Seq.max
 
 let part1 =
     Utils.FileReading.readLines
     >> transform
-    >> (fun arr -> energized arr ((0, 0), e))
+    >> (fun arr -> energized arr ((0, 0), right))
 
 let part2 = Utils.FileReading.readLines >> transform >> findMax
 
