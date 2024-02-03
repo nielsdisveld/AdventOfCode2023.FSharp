@@ -22,7 +22,7 @@ let next (c: char) p direction =
     | _ -> [| direction |]
     |> Seq.map (fun d -> p + d, d)
 
-let isInside (arr: _[,]) (x, y) =
+let isInside (arr: _[,]) ((x, y), _) =
     x >= 0 && x < arr.GetLength 0 && y >= 0 && y < arr.GetLength 1
 
 let energized (arr: _[,]) start =
@@ -35,7 +35,7 @@ let energized (arr: _[,]) start =
             let heads =
                 heads
                 |> Seq.collect (fun ((x, y), d) -> next arr[x, y] (x, y) d)
-                |> Seq.filter (fst >> isInside arr)
+                |> Seq.filter (isInside arr)
                 |> Seq.filter (visited.Contains >> not)
                 |> Set.ofSeq
 
@@ -49,10 +49,10 @@ let findMax (arr: _[,]) =
 
     let top = Seq.init width (fun i -> (i, 0), down)
     let bottom = Seq.init width (fun i -> (i, height - 1), up)
-    let leftSide = Seq.init height (fun i -> (0, i), right)
-    let rightSide = Seq.init height (fun i -> (width - 1, i), left)
+    let leftside = Seq.init height (fun i -> (0, i), right)
+    let rightside = Seq.init height (fun i -> (width - 1, i), left)
 
-    Seq.concat [| top; bottom; leftSide; rightSide |]
+    Seq.concat [| top; bottom; leftside; rightside |]
     |> Seq.map (energized arr)
     |> Seq.max
 
