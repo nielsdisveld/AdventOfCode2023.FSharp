@@ -2,7 +2,7 @@
 let (+) (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
 let transform inp =
-    let arr = inp |> Seq.map (Seq.toArray) |> Seq.toArray
+    let arr = inp |> Seq.map Seq.toArray |> Seq.toArray
     Array2D.init arr[0].Length arr.Length (fun x y -> arr[y][x])
 
 let next (c: char) p direction =
