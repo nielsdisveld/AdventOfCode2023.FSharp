@@ -19,7 +19,7 @@ let toTransitions n width height v =
     |> Seq.filter (fun (_, (dx, dy)) -> abs dx + abs dy <= n)
     |> Seq.toArray
 
-let transitions n (arr: _[,]) =
+let allTransitions n (arr: _[,]) =
     let width = arr.GetLength 0
     let height = arr.GetLength 1
 
@@ -51,13 +51,7 @@ type FindLoss(n, arr: _[,], edges) =
         | Some(v, _) ->
             let folder (losses: Map<_, _>, queue: (_ * int)[]) v2 =
                 let (x, y), _ = v2
-                let loss = losses[v] + arr[x, y]
-
-                let loss =
-                    match losses.TryFind v2 with
-                    | Some l when l < loss -> l
-                    | _ -> loss
-
+                let loss = min (losses[v] + arr[x, y]) losses[v2]
                 losses.Add(v2, loss), queue |> updateQueue (v2, loss)
 
             let losses, queue =
@@ -69,14 +63,19 @@ type FindLoss(n, arr: _[,], edges) =
             loop queue (transitions.Remove v) losses
 
     let queue = [| (start1, 0); (start2, 0) |]
-    let losses = queue |> Map.ofArray
+
+    let losses =
+        edges
+        |> Map.map (fun k _ -> System.Int32.MaxValue)
+        |> Map.add start1 0
+        |> Map.add start2 0
 
     member _.run() = loop queue edges losses
 
 let minLoss map = map |> Map.values |> Seq.min
 
 let run n arr =
-    let edges = arr |> transitions n
+    let edges = arr |> allTransitions n
 
     FindLoss(n, arr, edges).run ()
     |> Map.filter (fun (_, (dx, dy)) _ -> abs dx + abs dy >= (n - 6))
