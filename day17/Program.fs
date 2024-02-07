@@ -32,7 +32,7 @@ let transitions n (arr: _[,]) =
 
     states |> Seq.map (fun v -> v, toTransitions n width height v) |> Map.ofSeq
 
-let updateQueue (v, l) queue =
+let inline updateQueue (v, l) queue =
     match queue |> Array.tryFindIndex (fun (v', _) -> v' = v) with
     | Some i -> queue |> Array.updateAt i (v, l)
     | None -> queue |> Array.insertAt queue.Length (v, l)
@@ -84,5 +84,6 @@ let run n arr =
 let solve n =
     Utils.FileReading.readLines >> transform >> run n >> minLoss
 
+let x = 3
 solve 3 "input.txt" |> printfn "%A"
 solve 10 "input.txt" |> printfn "%A"
