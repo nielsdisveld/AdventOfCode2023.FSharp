@@ -15,7 +15,8 @@ let validTransitions n ((x, y), (dx, dy)) =
 
 let toTransitions n width height v =
     validTransitions n v
-    |> Seq.filter (fun ((x, y), (dx, dy)) -> x >= 0 && y >= 0 && x < width && y < height && abs dx + abs dy < (n + 1))
+    |> Seq.filter (fun ((x, y), _) -> x >= 0 && y >= 0 && x < width && y < height)
+    |> Seq.filter (fun (_, (dx, dy)) -> abs dx + abs dy <= n)
     |> Seq.toArray
 
 let transitions n (arr: _[,]) =
@@ -31,6 +32,10 @@ let transitions n (arr: _[,]) =
 
     states |> Seq.map (fun v -> v, toTransitions n width height v) |> Map.ofSeq
 
+let updateQueue (v, l) queue =
+    match queue |> Array.tryFindIndex (fun (v', _) -> v' = v) with
+    | Some i -> queue |> Array.updateAt i (v, l)
+    | None -> queue |> Array.insertAt queue.Length (v, l)
 
 type FindLoss(n, arr: _[,], edges) =
     let goal = (arr.GetLength 0) - 1, (arr.GetLength 1) - 1
@@ -42,6 +47,7 @@ type FindLoss(n, arr: _[,], edges) =
     [<TailCall>]
     let rec loop (queue: (_ * int)[]) (transitions: Map<_, _>) (losses: Map<_, _>) =
         match queue |> Array.tryHead with
+        | None -> losses |> Map.filter (fun (v, _) _ -> v = goal)
         | Some(v, _) ->
             let folder (losses: Map<_, _>, queue: (_ * int)[]) v2 =
                 let (x, y), _ = v2
@@ -52,9 +58,7 @@ type FindLoss(n, arr: _[,], edges) =
                     | Some l when l < loss -> l
                     | _ -> loss
 
-                match queue |> Array.tryFindIndex (fun (w, _) -> v2 = w) with
-                | Some index -> losses.Add(v2, loss), queue |> Array.updateAt index (v2, loss)
-                | None -> losses.Add(v2, loss), queue |> Array.insertAt queue.Length (v2, loss)
+                losses.Add(v2, loss), queue |> updateQueue (v2, loss)
 
             let losses, queue =
                 transitions.TryFind v
@@ -63,7 +67,6 @@ type FindLoss(n, arr: _[,], edges) =
 
             let queue = queue |> Array.removeAt 0 |> Array.sortBy snd
             loop queue (transitions.Remove v) losses
-        | None -> losses |> Map.filter (fun (v, _) _ -> v = goal)
 
     let queue = [| (start1, 0); (start2, 0) |]
     let losses = queue |> Map.ofArray
