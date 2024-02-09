@@ -43,9 +43,17 @@ type FindLoss(n, arr: _[,], edges) =
     let start1 = ((0, 0), (-n, 0))
     let start2 = ((0, 0), (0, -n))
 
+    let queue = [| (start1, 0); (start2, 0) |]
+
+    let losses =
+        edges
+        |> Map.map (fun _ _ -> System.Int32.MaxValue)
+        |> Map.add start1 0
+        |> Map.add start2 0
+
     // Dijkstra with priority queue
     [<TailCall>]
-    let rec loop (queue: (_ * int)[]) (transitions: Map<_, _>) (losses: Map<_, _>) =
+    let rec loop (transitions: Map<_, _>) (losses: Map<_, _>) (queue: (_ * int)[]) =
         match queue |> Array.tryHead with
         | None -> losses |> Map.filter (fun (v, _) _ -> v = goal)
         | Some(v, _) ->
@@ -60,17 +68,9 @@ type FindLoss(n, arr: _[,], edges) =
                 |> Seq.fold folder (losses, queue)
 
             let queue = queue |> Array.removeAt 0 |> Array.sortBy snd
-            loop queue (transitions.Remove v) losses
+            loop (transitions.Remove v) losses queue
 
-    let queue = [| (start1, 0); (start2, 0) |]
-
-    let losses =
-        edges
-        |> Map.map (fun k _ -> System.Int32.MaxValue)
-        |> Map.add start1 0
-        |> Map.add start2 0
-
-    member _.run() = loop queue edges losses
+    member _.run() = loop edges losses queue
 
 let minLoss map = map |> Map.values |> Seq.min
 
@@ -83,6 +83,5 @@ let run n arr =
 let solve n =
     Utils.FileReading.readLines >> transform >> run n >> minLoss
 
-let x = 3
 solve 3 "input.txt" |> printfn "%A"
 solve 10 "input.txt" |> printfn "%A"
