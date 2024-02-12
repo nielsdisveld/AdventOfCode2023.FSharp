@@ -54,11 +54,11 @@ let countInterior (trench: seq<(int64 * int64) * (int64 * int64)>) =
         |> Seq.pairwise
 
     let lastLine = ys |> Seq.last |> snd |> (fun y -> y, y + 1L)
-    let ys = Seq.append ys [ lastLine ]
+    let ys = Seq.append ys [| lastLine |]
     let trench = trench |> Seq.sortBy (fst >> fst)
 
     let countLine y =
-        let rec loop acc outsideOnLeft onBorder isInside x =
+        let rec loop acc (outsideOnLeft, onBorder, isInside) x =
             let line =
                 trench |> Seq.tryFind (fun ((x1, y1), (_, y2)) -> y >= y1 && y <= y2 && x1 > x)
 
@@ -68,24 +68,24 @@ let countInterior (trench: seq<(int64 * int64) * (int64 * int64)>) =
                 if isInside then
                     let acc = acc + x1 - x
 
-                    if y = y1 then loop acc false true false x1
-                    elif y = y2 then loop acc true true false x1
-                    else loop acc false false false x1
+                    if y = y1 then loop acc (false, true, false) x1
+                    elif y = y2 then loop acc (true, true, false) x1
+                    else loop acc (false, false, false) x1
                 elif onBorder then
                     let acc = acc + x1 - x
 
                     if (outsideOnLeft && y = y2) || (not outsideOnLeft && y = y1) then
-                        loop acc false false true x1
+                        loop acc (false, false, true) x1
                     else
-                        loop acc false false false x1
+                        loop acc (false, false, false) x1
                 elif y = y1 then
-                    loop (acc + 1L) true true false x1
+                    loop (acc + 1L) (true, true, false) x1
                 elif y = y2 then
-                    loop (acc + 1L) false true false x1
+                    loop (acc + 1L) (false, true, false) x1
                 else
-                    loop (acc + 1L) false false true x1
+                    loop (acc + 1L) (false, false, true) x1
 
-        loop 0L false false false System.Int64.MinValue
+        loop 0L (false, false, false) System.Int64.MinValue
 
     let countStrip (y1, y2) =
         if y1 = y2 then
