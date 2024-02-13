@@ -1,9 +1,9 @@
 ﻿// Types
 type Rating =
-    { x: int64
-      m: int64
-      a: int64
-      s: int64 }
+    { x: int64 * int64
+      m: int64 * int64
+      a: int64 * int64
+      s: int64 * int64 }
 
 type Operator =
     | GreaterThan
@@ -16,7 +16,7 @@ type Decision =
     | Condition of string * Operator * int64 * Decision
 
 // Parsing
-let getRating s rating =
+let getSubRating s rating =
     match s with
     | "x" -> rating.x
     | "m" -> rating.m
@@ -52,79 +52,66 @@ let parseWorkflow (str: string) =
 let parseRating (str: string) =
     match str[1 .. str.Length - 2].Split ',' |> Array.map (fun str -> str.Split '=') with
     | [| [| "x"; x |]; [| "m"; m |]; [| "a"; a |]; [| "s"; s |] |] ->
-        { x = int64 x
-          m = int64 m
-          a = int64 a
-          s = int64 s }
+        let x, m, a, s = int64 x, int64 m, int64 a, int64 s
+
+        { x = x, x + 1L
+          m = m, m + 1L
+          a = a, a + 1L
+          s = s, s + 1L }
     | _ -> failwith $"Invalid input: %s{str}"
 
 // Solving
 let applyCondition (subRating, operator, value) rating =
     match operator with
-    | GreaterThan -> (getRating subRating rating) > value
-    | LesserThan -> (getRating subRating rating) < value
+    | GreaterThan -> ((getSubRating subRating rating) |> fst) > value
+    | LesserThan -> ((getSubRating subRating rating) |> fst) < value
 
 
-let splitInterval x1 x2 x =
+let splitInterval x (x1, x2) =
     if x > x1 && x < x2 then
         [| x1, x; x, x2 |]
     else
         [| x1, x2 |]
 
-let findAccepted x m a s (workflows: Map<string, Decision[]>) =
-    let rec stepWorkflow i (x1, x2) (m1, m2) (a1, a2) (s1, s2) (workflow: Decision[]) =
+let findAccepted (workflows: Map<string, Decision[]>) rating =
+    let rec stepWorkflow i rating (workflow: Decision[]) =
         match workflow[i] with
         | Condition(subRating, operator, value, ifTrue) ->
             let split = if operator = GreaterThan then value + 1L else value
 
-            match subRating with
-            | "x" ->
-                splitInterval x1 x2 split
-                |> Seq.collect (fun (i1, i2) ->
-                    if applyCondition ("x", operator, value) { x = i1; m = m1; a = a1; s = s1 } then
-                        Seq.singleton (((i1, i2), (m1, m2), (a1, a2), (s1, s2)), ifTrue)
-                    else
-                        stepWorkflow (i + 1) (i1, i2) (m1, m2) (a1, a2) (s1, s2) workflow)
-            | "m" ->
-                splitInterval m1 m2 split
-                |> Seq.collect (fun (i1, i2) ->
-                    if applyCondition ("m", operator, value) { x = x1; m = i1; a = a1; s = s1 } then
-                        Seq.singleton (((x1, x2), (i1, i2), (a1, a2), (s1, s2)), ifTrue)
-                    else
-                        stepWorkflow (i + 1) (x1, x2) (i1, i2) (a1, a2) (s1, s2) workflow)
-            | "a" ->
-                splitInterval a1 a2 split
-                |> Seq.collect (fun (i1, i2) ->
-                    if applyCondition ("a", operator, value) { x = x1; m = m1; a = i1; s = s1 } then
-                        Seq.singleton (((x1, x2), (m1, m2), (i1, i2), (s1, s2)), ifTrue)
-                    else
-                        stepWorkflow (i + 1) (x1, x2) (m1, m2) (i1, i2) (s1, s2) workflow)
-            | "s" ->
-                splitInterval s1 s2 split
-                |> Seq.collect (fun (i1, i2) ->
-                    if applyCondition ("s", operator, value) { x = x1; m = m1; a = a1; s = i1 } then
-                        Seq.singleton (((x1, x2), (m1, m2), (a1, a2), (i1, i2)), ifTrue)
-                    else
-                        stepWorkflow (i + 1) (x1, x2) (m1, m2) (a1, a2) (i1, i2) workflow)
-            | _ -> failwith "Oof"
-        | decision -> Seq.singleton (((x1, x2), (m1, m2), (a1, a2), (s1, s2)), decision)
+            let ratings =
+                match subRating with
+                | "x" -> rating.x |> splitInterval split |> Array.map (fun r -> { rating with x = r })
+                | "m" -> rating.m |> splitInterval split |> Array.map (fun r -> { rating with m = r })
+                | "a" -> rating.a |> splitInterval split |> Array.map (fun r -> { rating with a = r })
+                | "s" -> rating.s |> splitInterval split |> Array.map (fun r -> { rating with s = r })
+                | _ -> failwith "Oof"
 
-    let rec loop (x1, x2) (m1, m2) (a1, a2) (s1, s2) name =
-        stepWorkflow 0 (x1, x2) (m1, m2) (a1, a2) (s1, s2) workflows[name]
-        |> Seq.collect (fun ((x, m, a, s), decision) ->
+            ratings
+            |> Seq.collect (fun rating ->
+                if applyCondition (subRating, operator, value) rating then
+                    Seq.singleton (rating, ifTrue)
+                else
+                    stepWorkflow (i + 1) rating workflow)
+        | decision -> Seq.singleton (rating, decision)
+
+    let rec loop rating name =
+        stepWorkflow 0 rating workflows[name]
+        |> Seq.collect (fun (rating, decision) ->
             match decision with
-            | Accepted -> Seq.singleton (x, m, a, s)
+            | Accepted -> Seq.singleton rating
             | Rejected -> Seq.empty
-            | Send send -> loop x m a s send
+            | Send send -> loop rating send
             | _ -> failwith "Oof")
 
-    loop x m a s "in"
+    loop rating "in"
 
 let score1 rating =
-    rating.x + rating.s + rating.a + rating.m
+    (fst rating.x) + (fst rating.s) + (fst rating.a) + (fst rating.m)
 
-let score2 ((x1, x2), (m1, m2), (a1, a2), (s1, s2)) =
-    (x2 - x1) * (m2 - m1) * (a2 - a1) * (s2 - s1)
+let score2 rating =
+    let inline l (i1, i2) = i2 - i1
+    (l rating.x) * (l rating.m) * (l rating.a) * (l rating.s)
 
 let parseInput inp =
     let input = inp |> Utils.FileReading.readLines
@@ -135,14 +122,17 @@ let parseInput inp =
 
 let solve1 workflows ratings =
     ratings
-    |> Seq.filter (fun { x = x; m = m; a = a; s = s } ->
-        findAccepted (x, x + 1L) (m, m + 1L) (a, a + 1L) (s, s + 1L) workflows
-        |> Seq.isEmpty
-        |> not)
+    |> Seq.filter (findAccepted workflows >> Seq.isEmpty >> not)
     |> Seq.sumBy score1
 
 let solve2 workflows =
-    let ratings = findAccepted (1, 4001) (1, 4001) (1, 4001) (1, 4001) workflows
+    let all =
+        { x = (1, 4001)
+          m = (1, 4001)
+          a = (1, 4001)
+          s = (1, 4001) }
+
+    let ratings = findAccepted workflows all
     ratings |> Seq.sumBy score2
 
 [<EntryPoint>]
