@@ -5,6 +5,12 @@ type Rating =
       a: int64 * int64
       s: int64 * int64 }
 
+type Subrating =
+    | X
+    | M
+    | A
+    | S
+
 type Operator =
     | GreaterThan
     | LesserThan
@@ -13,16 +19,23 @@ type Decision =
     | Accepted
     | Rejected
     | Send of string
-    | Condition of string * Operator * int64 * Decision
+    | Condition of Subrating * Operator * int64 * Decision
 
 // Parsing
-let getSubRating s rating =
+let getSubrating s rating =
     match s with
-    | "x" -> rating.x
-    | "m" -> rating.m
-    | "a" -> rating.a
-    | "s" -> rating.s
-    | _ -> failwith $"Invalid category: %s{s}"
+    | X -> rating.x
+    | M -> rating.m
+    | A -> rating.a
+    | S -> rating.s
+
+let parseSubrating =
+    function
+    | "x" -> X
+    | "m" -> M
+    | "a" -> A
+    | "s" -> S
+    | str -> failwith $"Incorrect subrating: %s{str}"
 
 let parseOutcome (str: string) =
     match str with
@@ -32,8 +45,8 @@ let parseOutcome (str: string) =
 
 let parseCondition (str: string) ifTrue =
     match str[0..0], str[1], str[2..] with
-    | s, '<', i -> Condition(s, LesserThan, int64 i, ifTrue)
-    | s, '>', i -> Condition(s, GreaterThan, int64 i, ifTrue)
+    | s, '<', i -> Condition(parseSubrating s, LesserThan, int64 i, ifTrue)
+    | s, '>', i -> Condition(parseSubrating s, GreaterThan, int64 i, ifTrue)
     | _ -> failwith $"Invalid condition: %s{str}"
 
 let parseRule (str: string) =
@@ -63,8 +76,8 @@ let parseRating (str: string) =
 // Solving
 let applyCondition (subRating, operator, value) rating =
     match operator with
-    | GreaterThan -> ((getSubRating subRating rating) |> fst) > value
-    | LesserThan -> ((getSubRating subRating rating) |> fst) < value
+    | GreaterThan -> ((getSubrating subRating rating) |> fst) > value
+    | LesserThan -> ((getSubrating subRating rating) |> fst) < value
 
 
 let splitInterval x (x1, x2) =
@@ -81,11 +94,10 @@ let findAccepted (workflows: Map<string, Decision[]>) rating =
 
             let ratings =
                 match subRating with
-                | "x" -> rating.x |> splitInterval split |> Array.map (fun r -> { rating with x = r })
-                | "m" -> rating.m |> splitInterval split |> Array.map (fun r -> { rating with m = r })
-                | "a" -> rating.a |> splitInterval split |> Array.map (fun r -> { rating with a = r })
-                | "s" -> rating.s |> splitInterval split |> Array.map (fun r -> { rating with s = r })
-                | _ -> failwith "Oof"
+                | X -> rating.x |> splitInterval split |> Array.map (fun r -> { rating with x = r })
+                | M -> rating.m |> splitInterval split |> Array.map (fun r -> { rating with m = r })
+                | A -> rating.a |> splitInterval split |> Array.map (fun r -> { rating with a = r })
+                | S -> rating.s |> splitInterval split |> Array.map (fun r -> { rating with s = r })
 
             ratings
             |> Seq.collect (fun rating ->
