@@ -107,6 +107,6 @@ let run _ =
         |> Seq.toArray
         |> Array.unzip
 
-    input1 |> getTrench |> countInterior |> printfn "%i"
-    input2 |> getTrench |> countInterior |> printfn "%i"
+    input1 |> getTrench |> countInterior |> printfn "Part1: %i"
+    input2 |> getTrench |> countInterior |> printfn "Part2: %i"
     0
