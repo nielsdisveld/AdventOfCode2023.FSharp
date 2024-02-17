@@ -1,5 +1,6 @@
 ﻿open Utils.Queue
 
+// Types
 type FlipFlop = bool
 
 type Conjuction = Map<string, bool>
@@ -15,6 +16,8 @@ type Module =
         | _ -> false
 
 type Pulse = string * bool * string
+
+// Parsing
 let parseDestinations (str: string) = str.Split ", "
 
 let parseLine (str: string) =
@@ -27,11 +30,11 @@ let parseLine (str: string) =
     | _ -> failwith "Oof"
 
 let finalizeConjuction (map: Map<string, (Module * _[])>) name (_, d) =
-    let folder dest modName (_, destinations) =
+    let folder inputs modName (_, destinations) =
         if destinations |> Array.contains name then
-            modName :: dest
+            modName :: inputs
         else
-            dest
+            inputs
 
     let inputs =
         map
@@ -50,6 +53,10 @@ let parseInput inp =
     |> Map.filter (fun _ (modType, _) -> modType.isConjuction)
     |> Map.fold finalizeConjuction map
 
+let getInput = Utils.FileReading.readLines >> parseInput
+
+// Solving
+// Part1
 let inline nextPulses source signal targets =
     targets |> Seq.map (fun t -> source, signal, t)
 
@@ -87,21 +94,36 @@ let inline pressButton (l, h, map) =
     let pulse: Pulse = "", false, "broadcaster"
     loop l h map (Queue.Empty.Enqueue pulse)
 
-let untilHigh (map: Map<string, _>) conjName switchName =
-    let rec loop i map =
-        match map |> Map.find conjName with
-        | Conjuction(switches), _ ->
-            if switches |> Map.find switchName then
-                i
-            else
-                let _, _, map = pressButton (0, 0, map)
-                loop (i + 1L) map
-        | _ -> failwith "Oof"
-
-    loop 0L map |> Utils.Debug.printAndPipe
-
 let pressButtonN n (map: Map<_, _>) =
     [| 1..n |] |> Seq.fold (fun state _ -> pressButton state) (0, 0, map)
+
+let score (l, h, _) = l * h
+
+// Part2
+let inline pressButtonPart2 (map: Map<string, _>) conjName switchName =
+    let rec loop map (queue: Queue<Pulse>) =
+        if queue.IsEmpty then
+            false, map
+        else
+            let (source, signal, target), queue = queue.Dequeue
+            let map, pulses = handlePulse map (source, signal, target)
+
+            match map[conjName] with
+            | Conjuction switches, _ when switches[switchName] -> true, map
+            | _ -> loop map (queue.EnqueueMany pulses)
+
+
+
+    let pulse: Pulse = "", false, "broadcaster"
+    loop map (Queue.Empty.Enqueue pulse)
+
+let pressUntilHigh map conjName switchName =
+    let rec loop i map =
+        let isHigh, map = pressButtonPart2 map conjName switchName
+        if isHigh then i else loop (i + 1L) map
+
+    loop 1 map
+
 
 let findlastConjBeforeRx map =
     let rec loop moduleName =
@@ -114,17 +136,17 @@ let findlastConjBeforeRx map =
 
     loop "rx"
 
-let score (l, h, _) = l * h
-let getInput = Utils.FileReading.readLines >> parseInput
+
+// Running
 let part1 = pressButtonN 1000 >> score
 
 let part2 input =
     let conjuctionName, switches = input |> findlastConjBeforeRx
-    switches |> Seq.map (untilHigh input conjuctionName) |> Seq.reduce (*)
+    switches |> Seq.map (pressUntilHigh input conjuctionName) |> Seq.reduce (*)
 
 [<EntryPoint>]
 let run _ =
     let input = "input.txt" |> getInput
     input |> part1 |> printfn "%A"
-    input |> part2 |> printfn "%A"
+    input |> part2 |> printfn "%i"
     0
